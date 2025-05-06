@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Mundo de Xareni - Juguetería Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Paw Patrol Inspired Palette */
+            --paw-blue: #005a9e;
+            --paw-red: #d12a2f;
+            --paw-yellow: #f7d32f;
+            --paw-light-blue: #a0e9ff;
+            --paw-white: #ffffff;
+            --paw-gray: #e5e7eb; /* Tailwind gray-200 */
+            --text-dark: #1e3a8a; /* Darker blue for text */
+            --text-medium: #6b7280; /* Gray 500 */
+        }
+
+        body {
+            /* Simple playful background */
+            background-color: #e0f2fe; /* Tailwind sky-100 */
+            background-image: radial-gradient(var(--paw-light-blue) 1px, transparent 1px);
+            background-size: 15px 15px;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-dark);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #e0f2fe; }
+        ::-webkit-scrollbar-thumb { background: var(--paw-blue); border-radius: 4px;}
+        ::-webkit-scrollbar-thumb:hover { background: #00447c; }
+
+        /* Header */
+        .store-header {
+            background-color: var(--paw-blue);
+            color: var(--paw-white);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .store-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 2rem; /* 32px */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .store-title .xareni {
+            color: var(--paw-yellow); /* Yellow for Xareni */
+        }
+
+        /* Product Card */
+        .product-card {
+            background-color: var(--paw-white);
+            border-radius: 12px;
+            border: 2px solid var(--paw-gray);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.12);
+        }
+        .product-card img {
+            background-color: var(--paw-gray);
+        }
+        .product-card .info { padding: 0.75rem; /* 12px */ }
+        .product-card .name { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; color: var(--text-dark); }
+        .product-card .price { font-weight: 700; font-size: 1rem; color: var(--paw-red); }
+
+        /* Cart */
+        .cart-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px dashed #d1d5db; }
+        .cart-item img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; background-color: var(--paw-gray); }
+        .cart-item .details { flex-grow: 1; }
+        .cart-item .name { font-size: 0.9rem; font-weight: 500; }
+        .cart-item .price { font-size: 0.8rem; color: var(--text-medium); }
+        .cart-item .remove-btn { color: var(--paw-red); opacity: 0.7; transition: opacity 0.2s; }
+        .cart-item .remove-btn:hover { opacity: 1; }
+
+        /* Buttons */
+        .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; transition: all 0.2s ease; cursor: pointer; border: none; }
+        .btn-blue { background-color: var(--paw-blue); color: white; }
+        .btn-blue:hover:not(:disabled) { background-color: #00447c; }
+        .btn-red { background-color: var(--paw-red); color: white; }
+        .btn-red:hover:not(:disabled) { background-color: #a72025; }
+        .btn-yellow { background-color: var(--paw-yellow); color: var(--text-dark); }
+        .btn-yellow:hover:not(:disabled) { background-color: #e6bf2a; }
+        .btn-outline { background-color: transparent; color: var(--paw-blue); border: 2px solid var(--paw-blue); }
+        .btn-outline:hover:not(:disabled) { background-color: rgba(0, 90, 158, 0.1); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Modal Transitions & Styling */
+        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0s linear 0.3s; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; transition: opacity 0.3s ease; }
+        .modal-content { background-color: var(--paw-white); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 90%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s ease; border: 3px solid var(--paw-blue); }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+        .modal-header { border-bottom: 2px solid var(--paw-gray); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 1.25rem; font-weight: 600; color: var(--paw-blue); }
+        .modal-body { padding: 1.5rem; overflow-y: auto; flex-grow: 1; }
+        .modal-footer { border-top: 2px solid var(--paw-gray); padding: 1rem 1.5rem; text-align: right; display: flex; justify-content: flex-end; gap: 0.75rem; }
+        .modal-close-btn { background: none; border: none; font-size: 1.75rem; color: var(--text-medium); cursor: pointer; line-height: 1; }
+        .modal-close-btn:hover { color: var(--text-dark); }
+
+        /* Input field basic style */
+        .input-field { border: 1px solid #d1d5db; border-radius: 6px; padding: 0.6rem 0.8rem; transition: border-color 0.2s ease, box-shadow 0.2s ease; width: 100%; }
+        .input-field:focus { outline: none; border-color: var(--paw-blue); box-shadow: 0 0 0 2px rgba(0, 90, 158, 0.3); }
+
+    </style>
+</head>
+<body class="p-4 md:p-6">
+
+    <div id="app" class="max-w-7xl mx-auto">
+
+        <div v-if="currentView === 'login'" class="flex justify-center items-center min-h-screen">
+            <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm border-2 border-gray-200">
+                <h1 class="text-3xl font-bold text-center mb-2 text-[var(--paw-blue)]" style="font-family: 'Fredoka One', cursive;">
+                    El Mundo de <span class="text-[var(--paw-yellow)]">Xareni</span>
+                </h1>
+                <p class="text-center text-[var(--text-medium)] mb-6">Ingresa tu correo para entrar</p>
+                <form @submit.prevent="login">
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium mb-1">Correo Electrónico:</label>
+                        <input type="email" id="email" v-model="loginEmail" required class="input-field" placeholder="tucorreo@ejemplo.com">
+                    </div>
+                    <button type="submit" class="btn btn-blue w-full">Ingresar</button>
+                </form>
+            </div>
+        </div>
+
+        <div v-else class="space-y-8">
+            <header class="store-header rounded-lg p-4 flex justify-between items-center sticky top-4 z-40">
+                 <div class="store-title"> El Mundo de <span class="xareni">Xareni</span> </div>
+                 <div class="flex items-center gap-4">
+                     <span class="text-sm hidden sm:inline">Hola, {{ currentUser?.email }}</span>
+                     <button @click="navigateTo('cart')" class="btn bg-white text-[var(--paw-blue)] hover:bg-gray-100 text-sm relative">
+                         <i class="fas fa-shopping-cart mr-1"></i>
+                         <span class="hidden sm:inline">Carrito</span>
+                         <span v-if="cart.length > 0" class="absolute -top-2 -right-2 bg-[var(--paw-red)] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{{ cart.length }}</span>
+                     </button>
+                     <button @click="logout" class="btn btn-red text-sm"><i class="fas fa-sign-out-alt"></i></button>
+                 </div>
+            </header>
+
+            <section class="bg-gradient-to-r from-blue-100 via-red-50 to-yellow-50 p-6 rounded-lg text-center shadow border border-blue-200">
+                <h2 class="text-2xl font-bold text-[var(--paw-blue)] mb-2" style="font-family: 'Fredoka One', cursive;">¡Diversión para Todos!</h2>
+                <p class="text-[var(--text-medium)]">Explora nuestra selección de juguetes increíbles para todas las edades.</p>
+            </section>
+
+            <section>
+                <h3 class="text-xl font-semibold mb-4 ml-1">Nuestros Juguetes</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+                    <div v-for="product in products" :key="product.id" class="product-card" @click="showProductDetails(product)">
+                        <img :src="product.imageUrl" :alt="product.name"
+                             onerror="this.onerror=null; this.src='https://placehold.co/200x150/e0f2fe/005a9e?text=Juguete';">
+                        <div class="info">
+                            <p class="name">{{ product.name }}</p>
+                            <p class="price">${{ formatCurrency(product.price) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section v-if="currentView === 'cart'" id="cart-section" class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                 <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="text-xl font-semibold">Tu Carrito</h3>
+                    <button @click="navigateTo('store')" class="text-sm text-[var(--paw-blue)] hover:underline">Seguir comprando</button>
+                 </div>
+                 <div v-if="cart.length === 0" class="text-center text-[var(--text-medium)] py-6 italic">
+                     Aún no has agregado juguetes.
+                 </div>
+                 <div v-else>
+                     <div class="space-y-3 mb-4 max-h-60 overflow-y-auto pr-2">
+                         <div v-for="(item, index) in cart" :key="item.id + '-' + index" class="cart-item">
+                             <img :src="item.imageUrl" :alt="item.name">
+                             <div class="details">
+                                <p class="name">{{ item.name }}</p>
+                                <p class="price">${{ formatCurrency(item.price) }}</p>
+                             </div>
+                             <button @click="removeFromCart(index)" class="remove-btn" title="Quitar">
+                                 <i class="fas fa-trash-alt"></i>
+                             </button>
+                         </div>
+                     </div>
+                     <div class="border-t pt-4 text-right space-y-1">
+                         <p class="text-md">Total: <span class="font-bold text-lg text-[var(--paw-red)]">${{ formatCurrency(cartTotal) }}</span></p>
+                         <div class="flex justify-end gap-3 mt-4">
+                             <button @click="clearCart" class="btn btn-outline border-[var(--paw-red)] text-[var(--paw-red)] hover:bg-red-50 text-sm">Vaciar Carrito</button>
+                             <button @click="checkout" class="btn btn-yellow text-sm">Pagar (Simulado)</button>
+                         </div>
+                     </div>
+                 </div>
+            </section>
+
+        </div> <transition name="fade">
+            <div v-if="isModalVisible" class="modal-overlay visible" @click.self="closeModal">
+                <transition name="scale">
+                    <div v-if="selectedProduct" class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">{{ selectedProduct.name }}</h3>
+                            <button @click="closeModal" class="modal-close-btn" aria-label="Cerrar">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="flex flex-col md:flex-row gap-6 items-center">
+                                <img :src="selectedProduct.imageUrl" :alt="selectedProduct.name" class="w-full md:w-2/5 h-48 object-contain rounded bg-gray-100 border border-gray-200"
+                                     onerror="this.onerror=null; this.src='https://placehold.co/250x250/e0f2fe/005a9e?text=Juguete';">
+                                <div class="md:w-3/5 space-y-3">
+                                    <p class="text-sm text-[var(--text-medium)]">{{ selectedProduct.description }}</p>
+                                    <p><span class="font-semibold">Edad recomendada:</span> {{ selectedProduct.age }}</p>
+                                    <p><span class="font-semibold">Marca:</span> {{ selectedProduct.brand }}</p>
+                                    <p class="text-xl font-bold text-[var(--paw-red)] mt-2">Precio: ${{ formatCurrency(selectedProduct.price) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                             <button @click="closeModal" class="btn bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm">Cerrar</button>
+                             <button @click="addToCartFromModal(selectedProduct)" class="btn btn-blue text-sm">
+                                 <i class="fas fa-cart-plus mr-1"></i> Agregar al Carrito
+                             </button>
+                        </div>
+                    </div>
+                 </transition>
+            </div>
+        </transition>
+
+    </div> <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                // --- State ---
+                const currentView = ref('login'); // 'login', 'store', 'cart'
+                const currentUser = ref(null);
+                const loginEmail = ref('');
+                const products = ref([]);
+                const cart = ref([]);
+                const selectedProduct = ref(null);
+                const isModalVisible = ref(false);
+
+                // --- Computed ---
+                const cartTotal = computed(() => cart.value.reduce((sum, item) => sum + item.price, 0));
+
+                // --- Methods ---
+                function formatCurrency(value) {
+                    return value.toFixed(2);
+                }
+
+                async function login() {
+                    if (!loginEmail.value) return;
+                    console.log('Simulando login para:', loginEmail.value);
+                    currentUser.value = { email: loginEmail.value }; // Simple login simulation
+                    navigateTo('store');
+                    loginEmail.value = '';
+                }
+
+                async function logout() {
+                    console.log('Cerrando sesión');
+                    currentUser.value = null;
+                    cart.value = [];
+                    navigateTo('login');
+                }
+
+                function navigateTo(view) {
+                    currentView.value = view;
+                     // Scroll to cart if navigating there
+                     if (view === 'cart') {
+                         // Use nextTick to wait for DOM update
+                         Vue.nextTick(() => {
+                              const cartElement = document.getElementById('cart-section');
+                              if (cartElement) {
+                                  cartElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }
+                         });
+                     }
+                }
+
+                function loadProducts() {
+                    // Sample toy data
+                    products.value = [
+                        { id: 1, name: 'Patrulla Canina - Vehículo Chase', price: 350.00, description: 'Vehículo de policía transformable con figura de Chase.', age: '3+ años', brand: 'Spin Master', imageUrl: 'https://placehold.co/200x150/005a9e/ffffff?text=Chase+Car' },
+                        { id: 2, name: 'Muñeca Llorona C/Accesorios', price: 480.00, description: 'Muñeca interactiva que llora lágrimas de verdad y hace sonidos.', age: '18m+', brand: 'Bebés Llorones', imageUrl: 'https://placehold.co/200x150/f47ac1/ffffff?text=Mu%C3%B1eca' },
+                        { id: 3, name: 'Bloques de Construcción Clásicos', price: 299.00, description: 'Set de 100 bloques de colores para construir sin límites.', age: '4+ años', brand: 'Mega Bloks', imageUrl: 'https://placehold.co/200x150/f7d32f/000000?text=Bloques' },
+                        { id: 4, name: 'Dinosaurio T-Rex Articulado', price: 420.00, description: 'Figura realista de T-Rex con mandíbula móvil y sonidos.', age: '4+ años', brand: 'Jurassic World', imageUrl: 'https://placehold.co/200x150/5cb85c/ffffff?text=T-Rex' },
+                        { id: 5, name: 'Set de Plastilina Play-Doh', price: 180.00, description: 'Incluye 8 botes de plastilina de colores y herramientas.', age: '2+ años', brand: 'Play-Doh', imageUrl: 'https://placehold.co/200x150/00a99d/ffffff?text=PlayDoh' },
+                        { id: 6, name: 'Rompecabezas Madera Animales', price: 150.00, description: 'Rompecabezas de encaje con piezas grandes de animales.', age: '12m+', brand: 'Melissa & Doug', imageUrl: 'https://placehold.co/200x150/f5821f/ffffff?text=Puzzle' },
+                        { id: 7, name: 'Carrito Montable Correpasillos', price: 650.00, description: 'Carrito resistente con volante y claxon.', age: '1-3 años', brand: 'Prinsel', imageUrl: 'https://placehold.co/200x150/d12a2f/ffffff?text=Carrito' },
+                        { id: 8, name: 'Juego de Té Infantil', price: 220.00, description: 'Set de té de plástico con tazas, platos y tetera.', age: '3+ años', brand: 'Genérico', imageUrl: 'https://placehold.co/200x150/f47ac1/ffffff?text=Juego+Te' },
+                         { id: 9, name: 'Pista de Carreras Flexible', price: 550.00, description: 'Crea tus propias pistas con tramos flexibles y coche incluido.', age: '3+ años', brand: 'Magic Tracks', imageUrl: 'https://placehold.co/200x150/005a9e/ffffff?text=Pista' },
+                         { id: 10, name: 'Libro de Colorear Gigante', price: 99.00, description: 'Libro con dibujos grandes para colorear.', age: '3+ años', brand: 'Crayola', imageUrl: 'https://placehold.co/200x150/f7d32f/000000?text=Libro' },
+                         { id: 11, name: 'Balón de Fútbol #4', price: 160.00, description: 'Balón tamaño oficial infantil, resistente.', age: '5+ años', brand: 'Voit', imageUrl: 'https://placehold.co/200x150/5cb85c/ffffff?text=Balon' },
+                         { id: 12, name: 'Set Doctor Juguetes', price: 310.00, description: 'Maletín con estetoscopio, jeringa y más accesorios.', age: '3+ años', brand: 'Disney Jr', imageUrl: 'https://placehold.co/200x150/f47ac1/ffffff?text=Doctor' },
+                         { id: 13, name: 'Guitarra Acústica Infantil', price: 450.00, description: 'Guitarra pequeña de juguete para iniciar en la música.', age: '4+ años', brand: 'Genérico', imageUrl: 'https://placehold.co/200x150/f5821f/ffffff?text=Guitarra' },
+                         { id: 14, name: 'Figura Acción Superhéroe', price: 280.00, description: 'Figura articulada de superhéroe popular (modelo varía).', age: '4+ años', brand: 'Marvel/DC', imageUrl: 'https://placehold.co/200x150/d12a2f/ffffff?text=Heroe' },
+                         { id: 15, name: 'Tren de Madera C/Vagones', price: 390.00, description: 'Tren clásico de madera con vagones magnéticos.', age: '2+ años', brand: 'Imaginarium', imageUrl: 'https://placehold.co/200x150/005a9e/ffffff?text=Tren' },
+                    ];
+                }
+
+                function showProductDetails(product) {
+                    selectedProduct.value = product;
+                    isModalVisible.value = true;
+                    document.body.style.overflow = 'hidden';
+                }
+
+                function closeModal() {
+                    isModalVisible.value = false;
+                    // selectedProduct.value = null; // Keep selected to show in modal again if needed quickly
+                    document.body.style.overflow = '';
+                }
+
+                function addToCart(product) {
+                    cart.value.push({ ...product });
+                    console.log(`${product.name} añadido al carrito.`);
+                    // Simple feedback
+                    alert(`${product.name} añadido al carrito!`);
+                }
+
+                function addToCartFromModal(product) {
+                    addToCart(product);
+                    closeModal();
+                }
+
+                function removeFromCart(index) {
+                    cart.value.splice(index, 1);
+                }
+
+                function clearCart() {
+                    if (confirm('¿Vaciar todo el carrito?')) {
+                        cart.value = [];
+                    }
+                }
+
+                function checkout() {
+                    if (cart.value.length === 0) return;
+                    alert(`Pago simulado por $${formatCurrency(cartTotal.value)}. ¡Gracias por comprar en El Mundo de Xareni!`);
+                    cart.value = [];
+                }
+
+                // --- Lifecycle ---
+                onMounted(() => {
+                    loadProducts();
+                });
+
+                // --- Expose to Template ---
+                return {
+                    currentView, currentUser, loginEmail, products, cart, selectedProduct, isModalVisible,
+                    cartTotal,
+                    formatCurrency, login, logout, navigateTo, loadProducts, showProductDetails, closeModal,
+                    addToCart, addToCartFromModal, removeFromCart, clearCart, checkout
+                };
+            }
+        }).mount('#app');
+    </script>
+
+</body>
+</html>

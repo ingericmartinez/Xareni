@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niño Tren - Juguetería Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Blue Palette Inspired by Juguetron's Green -> Blue */
+            --primary-blue: #0077cc; /* Main Blue */
+            --primary-blue-dark: #005fa3;
+            --secondary-blue: #5bc0de; /* Lighter Blue Accent */
+            --accent-yellow: #f0ad4e; /* Orange/Yellow Accent */
+            --bg-light: #f8f9fa;
+            --bg-white: #ffffff;
+            --border-color: #dee2e6;
+            --text-dark: #212529;
+            --text-medium: #495057;
+            --text-light: #6c757d;
+            --danger-color: #d9534f;
+            --danger-hover: #c9302c;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Nunito', sans-serif;
+            color: var(--text-dark);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #e9ecef; }
+        ::-webkit-scrollbar-thumb { background: var(--primary-blue); border-radius: 4px;}
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-blue-dark); }
+
+        /* Header */
+        .store-header { background-color: var(--bg-white); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .logo-text { font-weight: 800; font-size: 1.8rem; color: var(--primary-blue); }
+        .logo-text .train-icon { color: var(--accent-yellow); margin-right: 5px;}
+        .search-input { border: 1px solid var(--border-color); border-radius: 20px; padding: 0.5rem 1rem 0.5rem 2.5rem; font-size: 0.9rem; transition: border-color 0.2s, box-shadow 0.2s; }
+        .search-input:focus { outline: none; border-color: var(--primary-blue); box-shadow: 0 0 0 2px rgba(0, 119, 204, 0.2); }
+        .nav-icon { font-size: 1.3rem; color: var(--text-medium); transition: color 0.2s; }
+        .nav-icon:hover { color: var(--primary-blue); }
+
+        /* Product Card */
+        .product-card {
+            background-color: var(--bg-white); border-radius: 8px; border: 1px solid var(--border-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+        .product-card img { background-color: #f1f1f1; }
+        .product-card .info { padding: 0.75rem; flex-grow: 1; display: flex; flex-direction: column; }
+        .product-card .name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; color: var(--text-dark); line-height: 1.3; }
+        .product-card .brand { font-size: 0.75rem; color: var(--text-light); margin-bottom: 8px; }
+        .product-card .price { font-weight: 800; font-size: 1.1rem; color: var(--primary-blue); margin-top: auto; }
+        .product-card .add-btn {
+            background-color: var(--secondary-blue); color: white; font-size: 0.8rem; padding: 5px 10px;
+            border-radius: 5px; transition: background-color 0.2s; margin-top: 8px;
+        }
+        .product-card .add-btn:hover { background-color: #31b0d5; }
+
+        /* Cart Modal & Items */
+        .cart-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; background-color: var(--bg-light); }
+        .cart-item .details { flex-grow: 1; }
+        .cart-item .name { font-size: 0.9rem; font-weight: 600; }
+        .cart-item .price { font-size: 0.85rem; color: var(--text-medium); }
+        .cart-item .remove-btn { color: var(--danger-color); opacity: 0.7; transition: opacity 0.2s; font-size: 1rem; }
+        .cart-item .remove-btn:hover { opacity: 1; }
+
+        /* Buttons */
+        .btn { padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; transition: all 0.2s ease; cursor: pointer; border: none; }
+        .btn-primary { background-color: var(--primary-blue); color: white; }
+        .btn-primary:hover:not(:disabled) { background-color: var(--primary-blue-dark); }
+        .btn-secondary { background-color: var(--accent-yellow); color: white; }
+        .btn-secondary:hover:not(:disabled) { background-color: #ec971f; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-danger:hover:not(:disabled) { background-color: var(--danger-hover); }
+        .btn-outline { background-color: transparent; color: var(--primary-blue); border: 1px solid var(--primary-blue); }
+        .btn-outline:hover:not(:disabled) { background-color: rgba(0, 119, 204, 0.1); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Modal Transitions & Styling */
+        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0s linear 0.3s; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; transition: opacity 0.3s ease; }
+        .modal-content { background-color: var(--bg-white); border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 90%; max-width: 650px; max-height: 90vh; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+        .modal-header { border-bottom: 1px solid var(--border-color); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 1.25rem; font-weight: 700; color: var(--primary-blue); }
+        .modal-body { padding: 1.5rem; overflow-y: auto; flex-grow: 1; }
+        .modal-footer { border-top: 1px solid var(--border-color); padding: 1rem 1.5rem; text-align: right; display: flex; justify-content: flex-end; gap: 0.75rem; }
+        .modal-close-btn { background: none; border: none; font-size: 1.75rem; color: var(--text-medium); cursor: pointer; line-height: 1; }
+        .modal-close-btn:hover { color: var(--text-dark); }
+
+        /* Input field basic style */
+        .input-field { border: 1px solid var(--border-color); border-radius: 6px; padding: 0.6rem 0.8rem; transition: border-color 0.2s ease, box-shadow 0.2s ease; width: 100%; }
+        .input-field:focus { outline: none; border-color: var(--primary-blue); box-shadow: 0 0 0 2px rgba(0, 119, 204, 0.3); }
+
+    </style>
+</head>
+<body class="p-0 m-0"> <div id="app">
+
+        <div v-if="currentView === 'login'" class="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-100 to-indigo-100">
+            <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-sm border border-gray-200">
+                <h1 class="text-3xl font-extrabold text-center mb-4 text-[var(--primary-blue)]">
+                    <i class="fas fa-train mr-2 text-[var(--accent-yellow)]"></i>Niño Tren
+                </h1>
+                <p class="text-center text-[var(--text-medium)] mb-6">Ingresa tu correo para ver los juguetes</p>
+                <form @submit.prevent="login">
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium mb-1">Correo Electrónico:</label>
+                        <input type="email" id="email" v-model="loginEmail" required class="input-field" placeholder="tu@correo.com">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Ingresar</button>
+                </form>
+            </div>
+        </div>
+
+        <div v-else class="flex flex-col min-h-screen">
+            <header class="store-header p-4 sticky top-0 z-40 w-full border-b border-[var(--border-color)]">
+                <div class="container mx-auto flex justify-between items-center gap-4">
+                    <div class="logo-text flex-shrink-0">
+                        <i class="fas fa-train train-icon"></i>Niño Tren
+                    </div>
+                    <div class="relative flex-grow max-w-xl mx-4 hidden md:block">
+                         <input type="text" v-model="searchTerm" placeholder="Buscar juguete..." class="search-input w-full">
+                         <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <div class="flex items-center gap-4 md:gap-6 flex-shrink-0">
+                         <button @click="openModal('cart')" class="nav-icon relative" aria-label="Ver carrito">
+                             <i class="fas fa-shopping-cart"></i>
+                             <span v-if="cart.length > 0" class="absolute -top-1 -right-2 bg-[var(--danger-color)] text-white text-[0.6rem] rounded-full h-4 w-4 flex items-center justify-center font-bold">{{ cart.length }}</span>
+                         </button>
+                         <div class="relative">
+                             <button @click="toggleUserMenu" class="nav-icon" aria-label="Menú de usuario">
+                                 <i class="fas fa-user-circle"></i>
+                             </button>
+                             <div v-if="userMenuOpen" @click.away="userMenuOpen = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
+                                 <div class="py-1">
+                                     <span class="block px-4 py-2 text-xs text-gray-500">Hola, {{ currentUser?.email }}</span>
+                                     <a href="#" @click.prevent="logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Cerrar Sesión</a>
+                                 </div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+                 <div class="mt-3 md:hidden">
+                     <div class="relative">
+                         <input type="text" v-model="searchTerm" placeholder="Buscar juguete..." class="search-input w-full">
+                         <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                     </div>
+                 </div>
+            </header>
+
+            <main class="container mx-auto p-4 md:p-6 flex-grow">
+                 <nav class="mb-6 text-center space-x-3">
+                     <button class="text-sm font-medium text-[var(--text-medium)] hover:text-[var(--primary-blue)]">Novedades</button>
+                     <button class="text-sm font-medium text-[var(--text-medium)] hover:text-[var(--primary-blue)]">Marcas</button>
+                     <button class="text-sm font-medium text-[var(--text-medium)] hover:text-[var(--primary-blue)]">Edades</button>
+                     <button class="text-sm font-medium text-[var(--text-medium)] hover:text-[var(--primary-blue)]">Ofertas</button>
+                 </nav>
+
+                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+                    <div v-for="product in filteredProducts" :key="product.id" class="product-card" @click="showProductDetails(product)">
+                        <img :src="product.imageUrl" :alt="product.name" class="w-full h-36 md:h-44 object-cover"
+                             onerror="this.onerror=null; this.src='https://placehold.co/200x200/e2e8f0/94a3b8?text=Ni%C3%B1oTren';">
+                        <div class="info">
+                            <h3 class="name">{{ product.name }}</h3>
+                            <p class="brand">{{ product.brand }}</p>
+                            <p class="price">${{ formatCurrency(product.price) }}</p>
+                            <button @click.stop="addToCart(product)" class="add-btn w-full mt-2"> Agregar
+                            </button>
+                        </div>
+                    </div>
+                     <p v-if="filteredProducts.length === 0 && products.length > 0" class="col-span-full text-center text-gray-500 py-8">
+                         No se encontraron juguetes con "{{ searchTerm }}".
+                     </p>
+                </div>
+            </main>
+
+            <footer class="bg-gray-800 text-gray-300 p-6 mt-10 text-sm">
+                <div class="container mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div>
+                        <h4 class="font-bold mb-2 text-white">Niño Tren</h4>
+                        <ul class="space-y-1 text-xs">
+                            <li><a href="#" class="hover:text-white">Sobre Nosotros</a></li>
+                            <li><a href="#" class="hover:text-white">Tiendas</a></li>
+                            <li><a href="#" class="hover:text-white">Trabaja con Nosotros</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-2 text-white">Ayuda</h4>
+                         <ul class="space-y-1 text-xs">
+                            <li><a href="#" class="hover:text-white">Preguntas Frecuentes</a></li>
+                            <li><a href="#" class="hover:text-white">Envíos</a></li>
+                            <li><a href="#" class="hover:text-white">Devoluciones</a></li>
+                            <li><a href="#" class="hover:text-white">Contacto</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                         <h4 class="font-bold mb-2 text-white">Legal</h4>
+                         <ul class="space-y-1 text-xs">
+                            <li><a href="#" class="hover:text-white">Términos y Condiciones</a></li>
+                            <li><a href="#" class="hover:text-white">Aviso de Privacidad</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-2 text-white">Síguenos</h4>
+                        <div class="flex space-x-3 text-lg">
+                            <a href="#" aria-label="Facebook" class="hover:text-white"><i class="fab fa-facebook-square"></i></a>
+                            <a href="#" aria-label="Instagram" class="hover:text-white"><i class="fab fa-instagram"></i></a>
+                            <a href="#" aria-label="Tiktok" class="hover:text-white"><i class="fab fa-tiktok"></i></a>
+                        </div>
+                    </div>
+                </div>
+                 <div class="text-center text-xs text-gray-400 mt-6 pt-4 border-t border-gray-700">
+                     © {{ new Date().getFullYear() }} Niño Tren. Todos los derechos reservados.
+                 </div>
+            </footer>
+
+        </div> <transition name="fade">
+            <div v-if="isModalVisible && selectedProduct" class="modal-overlay visible" @click.self="closeModal">
+                <transition name="scale">
+                    <div v-if="selectedProduct" class="modal-content max-w-3xl"> <div class="modal-header">
+                            <h3 class="modal-title">{{ selectedProduct.name }}</h3>
+                            <button @click="closeModal" class="modal-close-btn" aria-label="Cerrar">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="flex flex-col md:flex-row gap-6 items-start">
+                                <img :src="selectedProduct.imageUrl" :alt="selectedProduct.name" class="w-full md:w-2/5 h-64 object-contain rounded bg-gray-100 border"
+                                     onerror="this.onerror=null; this.src='https://placehold.co/300x300/e2e8f0/94a3b8?text=Ni%C3%B1oTren';">
+                                <div class="md:w-3/5 space-y-3">
+                                    <p class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded inline-block font-medium">{{ selectedProduct.brand }}</p>
+                                    <p class="text-gray-700">{{ selectedProduct.description }}</p>
+                                    <p><span class="font-semibold">Edad:</span> {{ selectedProduct.age }}</p>
+                                    <p><span class="font-semibold">SKU:</span> {{ selectedProduct.sku }}</p>
+                                    <p class="text-2xl font-bold text-[var(--primary-blue)] mt-3">Precio: ${{ formatCurrency(selectedProduct.price) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                             <button @click="closeModal" class="btn btn-outline border-gray-400 text-gray-600 hover:bg-gray-100 text-sm">Cerrar</button>
+                             <button @click="addToCartFromModal(selectedProduct)" class="btn btn-primary text-sm">
+                                 <i class="fas fa-cart-plus mr-1"></i> Agregar al Carrito
+                             </button>
+                        </div>
+                    </div>
+                 </transition>
+            </div>
+        </transition>
+
+        <transition name="fade">
+             <div v-if="isCartVisible" class="modal-overlay visible" @click.self="closeCartModal">
+                 <transition name="scale">
+                     <div v-if="isCartVisible" class="modal-content max-w-md"> <div class="modal-header">
+                             <h3 class="modal-title"><i class="fas fa-shopping-cart mr-2"></i>Carrito de Compras</h3>
+                             <button @click="closeCartModal" class="modal-close-btn" aria-label="Cerrar">×</button>
+                         </div>
+                         <div class="modal-body">
+                             <div v-if="cart.length === 0" class="text-center text-[var(--text-medium)] py-8 italic">
+                                 Tu carrito está vacío.
+                             </div>
+                             <div v-else class="space-y-3 max-h-80 overflow-y-auto pr-2">
+                                 <div v-for="(item, index) in cart" :key="item.id + '-' + index" class="cart-item">
+                                     <img :src="item.imageUrl" :alt="item.name">
+                                     <div class="details">
+                                         <p class="name">{{ item.name }}</p>
+                                         <p class="price">${{ formatCurrency(item.price) }}</p>
+                                     </div>
+                                     <button @click="removeFromCart(index)" class="remove-btn" title="Quitar">
+                                         <i class="fas fa-trash-alt"></i>
+                                     </button>
+                                 </div>
+                             </div>
+                         </div>
+                          <div v-if="cart.length > 0" class="modal-footer flex-col items-end !text-right space-y-2"> <p class="text-lg font-semibold">Total: <span class="text-[var(--primary-blue)]">${{ formatCurrency(cartTotal) }}</span></p>
+                              <div class="flex gap-3">
+                                 <button @click="clearCart" class="btn btn-outline border-red-500 text-red-500 hover:bg-red-50 text-sm">Vaciar Carrito</button>
+                                 <button @click="checkout" class="btn btn-secondary text-sm">Pagar (Simulado)</button>
+                              </div>
+                          </div>
+                     </div>
+                 </transition>
+             </div>
+         </transition>
+
+    </div> <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                // --- State ---
+                const currentView = ref('login'); // 'login', 'store', 'cart' (cart is now a modal)
+                const currentUser = ref(null);
+                const loginEmail = ref('');
+                const products = ref([]);
+                const cart = ref([]);
+                const selectedProduct = ref(null); // For product detail modal
+                const isModalVisible = ref(false); // Controls product detail modal
+                const isCartVisible = ref(false); // Controls cart modal
+                const searchTerm = ref('');
+                const userMenuOpen = ref(false); // State for simple user dropdown
+
+                // --- Computed ---
+                const cartTotal = computed(() => cart.value.reduce((sum, item) => sum + item.price, 0));
+                const filteredProducts = computed(() => {
+                    if (!searchTerm.value) return products.value;
+                    const lowerSearch = searchTerm.value.toLowerCase();
+                    return products.value.filter(p =>
+                        p.name.toLowerCase().includes(lowerSearch) ||
+                        p.brand.toLowerCase().includes(lowerSearch) ||
+                        p.sku.toLowerCase().includes(lowerSearch)
+                    );
+                });
+
+                // --- Methods ---
+                function formatCurrency(value) { return value.toFixed(2); }
+
+                async function login() {
+                    if (!loginEmail.value) return;
+                    currentUser.value = { email: loginEmail.value };
+                    navigateTo('store');
+                    loginEmail.value = '';
+                }
+                async function logout() {
+                    currentUser.value = null;
+                    cart.value = [];
+                    userMenuOpen.value = false; // Close menu on logout
+                    navigateTo('login');
+                }
+                function navigateTo(view) { currentView.value = view; }
+                function toggleUserMenu() { userMenuOpen.value = !userMenuOpen.value; }
+
+                function loadProducts() {
+                    products.value = [
+                        { id: 1, sku: 'NT-LEGO-01', name: 'Set Construcción Ciudad', brand: 'LEGO', price: 899.00, description: 'Crea tu propia metrópolis con este set clásico.', age: '5+ años', imageUrl: 'https://placehold.co/200x200/0077cc/ffffff?text=LEGO+City' },
+                        { id: 2, sku: 'NT-BARB-05', name: 'Barbie Dreamhouse Aventuras', brand: 'Mattel', price: 1450.00, description: 'Muñeca Barbie con accesorios para viajar.', age: '3+ años', imageUrl: 'https://placehold.co/200x200/e0218a/ffffff?text=Barbie' },
+                        { id: 3, sku: 'NT-HW-C02', name: 'Hot Wheels Pista Tiburón', brand: 'Mattel', price: 650.00, description: 'Emocionante pista con ataque de tiburón.', age: '4+ años', imageUrl: 'https://placehold.co/200x200/f0ad4e/ffffff?text=Hot+Wheels' },
+                        { id: 4, sku: 'NT-FISH-P1', name: 'Fisher Price Ríe y Aprende Perrito', brand: 'Fisher-Price', price: 550.00, description: 'Perrito interactivo con canciones y frases.', age: '6m+', imageUrl: 'https://placehold.co/200x200/5bc0de/ffffff?text=Perrito+FP' },
+                        { id: 5, sku: 'NT-PLAYD-F1', name: 'Play-Doh Set Dentista Bromista', brand: 'Hasbro', price: 280.00, description: 'Crea dientes y arréglalos con el torno.', age: '3+ años', imageUrl: 'https://placehold.co/200x200/00a99d/ffffff?text=PlayDoh+Dent' },
+                        { id: 6, sku: 'NT-NERF-E1', name: 'Nerf Elite Disruptor', brand: 'Hasbro', price: 320.00, description: 'Lanzador de 6 dardos con tambor rotatorio.', age: '8+ años', imageUrl: 'https://placehold.co/200x200/f0ad4e/000000?text=Nerf' },
+                        { id: 7, sku: 'NT-PUZZ-08', name: 'Rompecabezas 1000 Piezas Paisaje', brand: 'Ravensburger', price: 350.00, description: 'Desafiante rompecabezas con imagen de alta calidad.', age: '12+ años', imageUrl: 'https://placehold.co/200x200/5cb85c/ffffff?text=Puzzle+1000' },
+                        { id: 8, sku: 'NT-MONT-03', name: 'Montable Eléctrico Mini Cooper', brand: 'Prinsel', price: 2800.00, description: 'Coche eléctrico con control remoto para padres.', age: '2-5 años', imageUrl: 'https://placehold.co/200x200/d9534f/ffffff?text=Mini+Cooper' },
+                        { id: 9, sku: 'NT-FUNK-S1', name: 'Funko POP! Star Wars Grogu', brand: 'Funko', price: 250.00, description: 'Figura de vinilo coleccionable de Grogu.', age: '3+ años', imageUrl: 'https://placehold.co/200x200/99cc99/003300?text=Grogu+POP' },
+                        { id: 10, sku: 'NT-GAME-M1', name: 'Monopoly Clásico', brand: 'Hasbro Gaming', price: 450.00, description: 'El clásico juego de compra y venta de propiedades.', age: '8+ años', imageUrl: 'https://placehold.co/200x200/cee9d7/006400?text=Monopoly' },
+                        { id: 11, sku: 'NT-LOL-D1', name: 'Muñeca LOL Surprise OMG', brand: 'MGA Entertainment', price: 680.00, description: 'Muñeca de moda con múltiples sorpresas.', age: '4+ años', imageUrl: 'https://placehold.co/200x200/ffc0cb/d1106a?text=LOL+OMG' },
+                        { id: 12, sku: 'NT-SCI-K1', name: 'Kit de Ciencia Explosiva', brand: 'Mi Alegría', price: 310.00, description: 'Realiza experimentos científicos divertidos y seguros.', age: '8+ años', imageUrl: 'https://placehold.co/200x200/add8e6/00008b?text=Ciencia' },
+                        { id: 13, sku: 'NT-PLMO-F1', name: 'Playmobil Set Piratas', brand: 'Playmobil', price: 720.00, description: 'Barco pirata con figuras y accesorios.', age: '4+ años', imageUrl: 'https://placehold.co/200x200/a52a2a/ffffff?text=Playmobil' },
+                        { id: 14, sku: 'NT-BABY-A1', name: 'Muñeca Baby Alive Hora de Comer', brand: 'Hasbro', price: 590.00, description: 'Muñeca que come y hace "popó".', age: '3+ años', imageUrl: 'https://placehold.co/200x200/f8d7da/8c1b1f?text=Baby+Alive' },
+                        { id: 15, sku: 'NT-DRON-M1', name: 'Mini Drone con Cámara', brand: 'Genérico', price: 850.00, description: 'Drone pequeño y fácil de volar con cámara básica.', age: '14+ años', imageUrl: 'https://placehold.co/200x200/6c757d/ffffff?text=Mini+Drone' },
+                    ];
+                }
+
+                function showProductDetails(product) {
+                    selectedProduct.value = product;
+                    isModalVisible.value = true;
+                }
+                function closeModal() { isModalVisible.value = false; }
+                function openCartModal() { isCartVisible.value = true; }
+                function closeCartModal() { isCartVisible.value = false; }
+
+                function addToCart(product) {
+                    cart.value.push({ ...product });
+                    // Simple feedback
+                    const btn = event.target;
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Añadido';
+                    btn.disabled = true;
+                    setTimeout(() => {
+                       btn.innerHTML = originalText;
+                       btn.disabled = false;
+                    }, 1000);
+                }
+                function addToCartFromModal(product) {
+                    addToCart(product);
+                    closeModal();
+                }
+                function removeFromCart(index) { cart.value.splice(index, 1); }
+                function clearCart() { if (cart.value.length > 0 && confirm('¿Vaciar todo el carrito?')) { cart.value = []; } }
+                function checkout() {
+                    if (cart.value.length === 0) return;
+                    alert(`Pago simulado por $${formatCurrency(cartTotal.value)}. ¡Gracias por comprar en Niño Tren!`);
+                    cart.value = [];
+                    closeCartModal(); // Close cart after checkout
+                }
+
+                // --- Lifecycle ---
+                onMounted(loadProducts);
+
+                // --- Expose ---
+                return {
+                    currentView, currentUser, loginEmail, products, cart, selectedProduct, isModalVisible, isCartVisible, searchTerm, userMenuOpen,
+                    cartTotal, filteredProducts,
+                    formatCurrency, login, logout, navigateTo, toggleUserMenu, loadProducts, showProductDetails, closeModal, openCartModal, closeCartModal,
+                    addToCart, addToCartFromModal, removeFromCart, clearCart, checkout
+                };
+            }
+        }).mount('#app');
+    </script>
+
+</body>
+</html>
